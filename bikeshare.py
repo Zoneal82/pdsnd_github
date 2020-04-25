@@ -1,327 +1,384 @@
-import time
 import pandas as pd
-import numpy as np
+from datetime import datetime
+from datetime import timedelta
+import time
 
-# loading files
-CITY_DATA = {
-    'chicago':'chicago.csv',
-    'new york city':'new_york_city.csv',
-    'washington':'washington.csv'
-}
+## Filenames
+#chicago = 'chicago.csv'
+#new_york_city = 'new_york_city.csv'
+#washington = 'washington.csv'
 
-def city_input():
+
+def get_city():
+    '''Asks the user for a city and returns the filename for that city's bike share data.
+    Args:
+        none.
+    Returns:
+        (str) Filename for a city's bikeshare data.
     '''
-    This function starts the user interface by introduction and
-    asking the user with the city he/she wants to analyze
+    city = ''
+    while city.lower() not in ['chicago', 'new york', 'washington']:
+        city = input('\nHello! I am Zayyad Abdulrahman Umar Let\'s explore some US bikeshare data!\n'
+                     'Would you like to see data for Chicago, New York, or'
+                     ' Washington?\n')
+        if city.lower() == 'chicago':
+            return 'chicago.csv'
+        elif city.lower() == 'new york':
+            return 'new_york_city.csv'
+        elif city.lower() == 'washington':
+            return 'washington.csv'
+        else:
+            print('Sorry, I do not understand your input. Please input either '
+                  'Chicago, New York, or Washington.')
+
+def get_time_period():
+    '''Asks the user for a time period and returns the specified filter.
+    Args:
+        none.
+    Returns:
+        (str) Time filter for the bikeshare data.
     '''
-    print('Hello! I am Zayyad Abdrahman Umar! Let\'s explore some US bikeshare data!')
-    print(' ')
-    # get user input for city (chicago, new york city, washington). HINT: Use a while loop to handle invalid inputs
-    print('Enter the city you want to analyze the data for:')
-    print('Chicago: 1')
-    print('New York: 2')
-    print('Washington: 3')
-    print(' ')
-    city = input('Please choose the city for which you would like to see the Statistics: ')
-    city = city.lower()
-    while True:     # for handling the unexpected input by user
-            if city == '1' or city == 'chicago':
-                print("\nChicago City! Okay Let's go further\n")
-                return 'chicago'
-            if city == '2' or city == 'new york':
-                print("\nNew York City! Okay let's go further\n")
-                return 'new york city'
-            elif city == '3' or city == 'washington':
-                print("\nWashington! Okay let's go further\n")
-                return 'washington'
-            # error handled by implementing 'else' and provided another option to input data
-            else:
-                print('\nPlease enter 1, 2 or 3 or the names of cities\n')
-                city = input('Please choose the city for which you would like to see the Statistics: ')
-                city = city.lower()
-    return city
+    time_period = ''
+    while time_period.lower() not in ['month', 'day', 'none']:
+        time_period = input('\nWould you like to filter the data by month, day,'
+                            ' or not at all? Type "none" for no time filter.\n')
+        if time_period.lower() not in ['month', 'day', 'none']:
+            print('Sorry, I do not understand your input.')
+    return time_period
 
-def get_time():
+def get_month():
+    '''Asks the user for a month and returns the specified month.
+    Args:
+        none.
+    Returns:
+        (tuple) Lower limit, upper limit of month for the bikeshare data.
     '''
-    the code below asks the user to choose between month and day of month,
-    day of the week or no filters
+    month_input = ''
+    months_dict = {'january': 1, 'february': 2, 'march': 3, 'april': 4,
+                   'may': 5, 'june': 6}
+    while month_input.lower() not in months_dict.keys():
+        month_input = input('\nWhich month? January, February, March, April,'
+                            ' May, or June?\n')
+        if month_input.lower() not in months_dict.keys():
+            print(Please type in a '
+                  'month between January and June')
+    month = months_dict[month_input.lower()]
+    return ('2017-{}'.format(month), '2017-{}'.format(month + 1))
+
+def get_day():
+    '''Asks the user for a day and returns the specified day.
+    Args:
+        none.
+    Returns:
+        (tuple) Lower limit, upper limit of date for the bikeshare data.
     '''
-    period = input('\nYou want to filter the data by month and day of the month, day of the week, or you do not want to filter at all? Type "no" for no period filter.\n')
-    period = period.lower()
-
-    while True:
-        if period == "month":
-            while True:
-                day_month = input("\nDo you want to filter the data by day of the month too? Type 'YES' or 'NO'\n").lower()
-                if day_month == "no":
-                    print('\n The data is now being filtered by month...\n')
-                    return 'month'
-                elif day_month == "yes":
-                   print ('\n The data is now being filtered by month and day of the month...\n')
-                   return 'day_of_month'
-
-        if period == "day":
-            print('\n The data is now being filtered by the day of the week...\n')
-            return 'day_of_week'
-        elif period == "no":
-            print('\n No period filter is being applied to the data\n')
-            return "none"
-        period = input("\n Please choose a period filter option between 'month', 'day' of the week, or none (no) \n").lower()
-
-def month_info(m):      # get user input for month (all, january, february, ... , june)
-    if m == 'month':
-        month = input('\nChoose month! January, February, March, April, May, or June? Please type the full month name.\n')
-        while month.strip().lower() not in ['january', 'february', 'march', 'april', 'may', 'june']:
-            month = input('\nPlease choose between January, February, March, April, May, or June? Please type the full month name.\n')
-        return month.strip().lower()
-    else:
-        return 'none'
-
-def month_day_info(df, day_m):     # Asks the user for a month and a day of month,
-    month_day = []
-    if day_m == "day_of_month":
-        month = month_info("month")
-        month_day.append(month)
-        maximum_day_month = max_day_month(df, month)
-
-        while (True):
-            ask = """ \n Which day of the month? \n
-            Please type your response as an integer between 1 and 7 """
-            ask  = ask + str(maximum_day_month) + "\n"
-            day_m = input(ask)
-
+    this_month = get_month()[0]
+    month = int(this_month[5:])
+    valid_date = False
+    while valid_date == False:
+        is_int = False
+        day = input('\nWhich day? Please type your response as an integer.\n')
+        while is_int == False:
             try:
-                day_m = int(day_m)
-                if 1 <= day_m <= maximum_day_month:
-                    month_day.append(day_m)
-                    return month_day
+                day = int(day)
+                is_int = True
             except ValueError:
-                print("That's not a numeric value")
+                print('Sorry, I do not understand your input. Please type your'
+                      ' response as an integer.')
+                day = input('\nWhich day? Please type your response as an integer.\n')
+        try:
+            start_date = datetime(2017, month, day)
+            valid_date = True
+        except ValueError as e:
+            print(str(e).capitalize())
+    end_date = start_date + timedelta(days=1)
+    return (str(start_date), str(end_date))
+
+def popular_month(df):
+    '''Finds and prints the most popular month for start time.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
+    '''
+    months = ['January', 'February', 'March', 'April', 'May', 'June']
+    index = int(df['start_time'].dt.month.mode())
+    most_pop_month = months[index - 1]
+    print('The most popular month is {}.'.format(most_pop_month))
+
+def popular_day(df):
+    '''Finds and prints the most popular day of week (Monday, Tuesday, etc.) for start time.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
+    '''
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+                    'Saturday', 'Sunday']
+    index = int(df['start_time'].dt.dayofweek.mode())
+    most_pop_day = days_of_week[index]
+    print('The most popular day of week for start time is {}.'.format(most_pop_day))
+
+def popular_hour(df):
+    '''Finds and prints the most popular hour of day for start time.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
+    '''
+    most_pop_hour = int(df['start_time'].dt.hour.mode())
+    if most_pop_hour == 0:
+        am_pm = 'am'
+        pop_hour_readable = 12
+    elif 1 <= most_pop_hour < 13:
+        am_pm = 'am'
+        pop_hour_readable = most_pop_hour
+    elif 13 <= most_pop_hour < 24:
+        am_pm = 'pm'
+        pop_hour_readable = most_pop_hour - 12
+    print('The most popular hour of day for start time is {}{}.'.format(pop_hour_readable, am_pm))
+
+def trip_duration(df):
+    '''Finds and prints the total trip duration and average trip duration in
+       hours, minutes, and seconds.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
+    '''
+    total_duration = df['trip_duration'].sum()
+    minute, second = divmod(total_duration, 60)
+    hour, minute = divmod(minute, 60)
+    print('The total trip duration is {} hours, {} minutes and {}'
+          ' seconds.'.format(hour, minute, second))
+    average_duration = round(df['trip_duration'].mean())
+    m, s = divmod(average_duration, 60)
+    if m > 60:
+        h, m = divmod(m, 60)
+        print('The average trip duration is {} hours, {} minutes and {}'
+              ' seconds.'.format(h, m, s))
     else:
-        return 'none'
-def month_info(m):      # get user input for month (all, january, february, ... , june)
-    if m == 'month':
-        month = input('\nChoose month! January, February, March, April, May, or June? Please type the full month name.\n')
-        while month.strip().lower() not in ['january', 'february', 'march', 'april', 'may', 'june']:
-            month = input('\nPlease choose between January, February, March, April, May, or June? Please type the full month name.\n')
-        return month.strip().lower()
-    else:
-        return 'none'
+        print('The average trip duration is {} minutes and {} seconds.'.format(m, s))
 
-def load_data(city):
-    # Loads data for the specified city
-    print('\nLoading the data... .. .. ..\n')
-    df = pd.read_csv(CITY_DATA[city])
-
-    #extracting from Start Time
-    df['Start Time'] = pd.to_datetime(df['Start Time'])
-    df['day_of_week'] = df['Start Time'].dt.weekday_name
-    df['month'] = df['Start Time'].dt.month
-    df["day_of_month"] = df["Start Time"].dt.day
-    return df
-
-def time_filters(df, time, month, week_day, md):
+def popular_stations(df):
+    '''Finds and prints the most popular start station and most popular end station.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
     '''
-    Filters the data according to the criteria specified by the user.
-    Local Variables:
-    df         - city dataframe
-    time       - indicates the specified time (either "month", "day_of_month", or "day_of_week")
-    month      - indicates the month used to filter the data
-    week_day   - indicates the week day used to filter the data
-    md         - list that indicates the month (at index [0]) used to filter the data
-                    and the day number (at index [1])
-    Result:
-    df - dataframe to be used for final calculation
+    pop_start = df['start_station'].mode().to_string(index = False)
+    pop_end = df['end_station'].mode().to_string(index = False)
+    print('The most popular start station is {}.'.format(pop_start))
+    print('The most popular end station is {}.'.format(pop_end))
+
+def popular_trip(df):
+    '''Finds and prints the most popular trip.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
     '''
-    print('Data loaded. Now computing statistics... \n')
-    #Filter by Month
-    if time == 'month':
-        months = ['january', 'february', 'march', 'april', 'may', 'june']
-        month = months.index(month) + 1
-        df = df[df['month'] == month]
+    most_pop_trip = df['journey'].mode().to_string(index = False)
+    # The 'journey' column is created in the statistics() function.
+    print('The most popular trip is {}.'.format(most_pop_trip))
 
-    #Filter by day of week
-    if time == 'day_of_week':
-        days = ['Monday', 'Tuesday',
-        'Wednesday', 'Thursday',
-        'Friday', 'Saturday', 'Sunday']
-        for d in days:
-            if week_day.capitalize() in d:
-                day_of_week = d
-        df = df[df['day_of_week'] == day_of_week]
-
-    if time == "day_of_month":
-        months = ['january', 'february', 'march', 'april', 'may', 'june']
-        month = md[0]
-        month = months.index(month) + 1
-        df = df[df['month']==month]
-        day = md[1]
-        df = df[df['day_of_month'] == day]
-
-    return df
-
-def max_day_month(df, month):
-    '''Gets the max day of the month '''
-
-    months = {"january": 1, "february": 2, "march": 3, "april":4, "may": 5, "june":6}
-    df = df[df["month"] == months[month]]
-    max_day = max(df["day_of_month"])
-    return max_day
-
-def month_freq(df):
-    '''What is the most popular month for start time?
+def users(df):
+    '''Finds and prints the counts of each user type.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
     '''
-    # df - dataframe returned from time_filters
-    print('\n * Q1. What is the most popular month for bike traveling?')
-    m = df.month.mode()[0]
-    months = ['january', 'february', 'march', 'april', 'may', 'june']
-    popular_month = months[m - 1].capitalize()
-    return popular_month
+    subs = df.query('user_type == "Subscriber"').user_type.count()
+    cust = df.query('user_type == "Customer"').user_type.count()
+    print('There are {} Subscribers and {} Customers.'.format(subs, cust))
 
-def day_freq(df):
-    '''What is the most popular day of week for start time?
+def gender(df):
+    '''Finds and prints the counts of gender.
+    Args:
+        bikeshare dataframe
+    Returns:
+        none
     '''
-    # df - dataframe returned from time_filters
-    print('\n * Q2. What is the most popular day of the week for bike rides?')
-    return df['day_of_week'].value_counts().reset_index()['index'][0]
-
-def hour_freq(df):
-    '''What is the most popular hour of day for start time?
-    '''
-    # df - dataframe returned from time_filters
-    print('\n * Q3. What is the most popular hour of the day for bike rides?')
-    df['hour'] = df['Start Time'].dt.hour
-    return df.hour.mode()[0]
-
-def ride_duration(df):
-    '''
-    What is the total ride duration and average ride duration?
-    Result:
-        tuple = total ride duration, average ride durations
-    '''
-    # df - dataframe returned from time_filters
-    print('\n * Q4. What was the total traveling done for 2017 through June, and what was the average time spent on each trip?')
-    df['End Time'] = pd.to_datetime(df['End Time'])
-    df['Travel Time'] = df['End Time'] - df['Start Time']
-    #sum for total trip time, mean for avg trip time
-    total_ride_time = np.sum(df['Travel Time'])
-    total_days = str(total_ride_time).split()[0]
-
-    print ("\nThe total travel time on 2017 through June was " + total_days + " days \n")
-    avg_ride_time = np.mean(df['Travel Time'])
-    avg_days = str(avg_ride_time).split()[0]
-    print("The average travel time on 2017 through June was " + avg_days + " days \n")
-
-    return total_ride_time, avg_ride_time
-
-def stations_freq(df):
-    '''What is the most popular start station and most popular end station?
-    '''
-    # df - dataframe returned from time_filters
-    print("\n* Q5. What is the most popular start station?\n")
-    start_station = df['Start Station'].value_counts().reset_index()['index'][0]
-    print (start_station)
-    print("\n* Q6. What is the most popular end station?\n")
-    end_station = df['End Station'].value_counts().reset_index()['index'][0]
-    print(end_station)
-    return start_station, end_station
-
-def common_trip(df):
-    '''What is the most popular trip?
-    '''
-    # df - dataframe returned from time_filters
-    result = df[['Start Station', 'End Station']].groupby(['Start Station', 'End Station']).size().nlargest(1)
-    print('\n* Q7. What was the most popular trip from start to end?')
-    return result
-
-def bike_users(df):
-    '''What are the counts of each user type?
-    '''
-     # df - dataframe returned from time_filters
-    print('\n* Q8. Types of users: subscribers, customers, others\n')
-    return df['User Type'].value_counts()
-
-def gender_data(df):
-    '''What are the counts of gender?'''
-    # df - dataframe returned from time_filters
-    try:
-        print('\n* Q9. What is the breakdown of gender among users?\n')
-        return df['Gender'].value_counts()
-    except:
-        print('There is no gender data in the source.')
+    male_count = df.query('gender == "Male"').gender.count()
+    female_count = df.query('gender == "Male"').gender.count()
+    print('There are {} male users and {} female users.'.format(male_count, female_count))
 
 def birth_years(df):
-    '''What is the earliest, latest, and most frequent birth year?'''
-    # df - dataframe returned from time_filters
-    try:
-        print('\n* Q10. What is the earliest, latest, and most frequent year of birth, respectively?')
-        earliest = np.min(df['Birth Year'])
-        print ("\nThe earliest year of birth is " + str(earliest) + "\n")
-        latest = np.max(df['Birth Year'])
-        print ("The latest year of birth is " + str(latest) + "\n")
-        most_frequent= df['Birth Year'].mode()[0]
-        print ("The most frequent year of birth is " + str(most_frequent) + "\n")
-        return earliest, latest, most_frequent
-    except:
-        print('No available birth date data for this period.')
-
-def process(f, df):
-    '''Calculates the time it takes to commpute a statistic
-    '''
-    start_time = time.time()
-    statToCompute = f(df)
-    print(statToCompute)
-    print("Computing this stat took %s seconds." % (time.time() - start_time))
-
-def disp_raw_data(df):
-    '''
-    Displays the data used to compute the stats
-    Input:
-        the df with all the bikeshare data
+    ''' Finds and prints the earliest (i.e. oldest user), most recent (i.e.
+        youngest user), and most popular birth years.
+    Args:
+        bikeshare dataframe
     Returns:
-       none
+        none
     '''
-    #omit irrelevant columns from visualization
-    df = df.drop(['month', 'day_of_month'], axis = 1)
-    row_index = 0
+    earliest = int(df['birth_year'].min())
+    latest = int(df['birth_year'].max())
+    mode = int(df['birth_year'].mode())
+    print('The oldest users are born in {}.\nThe youngest users are born in {}.'
+          '\nThe most popular birth year is {}.'.format(earliest, latest, mode))
 
-    see_data = input("\nYou like to see rows of the data used to compute the stats? Please write 'yes' or 'no' \n").lower()
-    while True:
-        if see_data == 'no':
-            return
-        if see_data == 'yes':
-            print(df[row_index: row_index + 5])
-            row_index = row_index + 5
-        see_data = input("\n Would you like to see five more rows of the data used to compute the stats? Please write 'yes' or 'no' \n").lower()
-
-def main():
-    '''The main function calculates and prints out the
-    descriptive statistics about a requested city
+def display_data(df):
+    '''Displays five lines of data if the user specifies that they would like to.
+    After displaying five lines, ask the user if they would like to see five more,
+    continuing asking until they say stop.
+    Args:
+        data frame
+    Returns:
+        none
     '''
-    # calling all the functions step by step
-    city = city_input()
-    df = load_data(city)
-    period = get_time()
-    month = month_info(period)
-    day = day_info(period)
-    month_day = month_day_info(df, period)
+    def is_valid(display):
+        if display.lower() in ['yes', 'no']:
+            return True
+        else:
+            return False
+    head = 0
+    tail = 5
+    valid_input = False
+    while valid_input == False:
+        display = input('\nWould you like to view individual trip data? '
+                        'Type \'yes\' or \'no\'.\n')
+        valid_input = is_valid(display)
+        if valid_input == True:
+            break
+        else:
+            print("Sorry, I do not understand your input. Please type 'yes' or"
+                  " 'no'.")
+    if display.lower() == 'yes':
+        # prints every column except the 'journey' column created in statistics()
+        print(df[df.columns[0:-1]].iloc[head:tail])
+        display_more = ''
+        while display_more.lower() != 'no':
+            valid_input_2 = False
+            while valid_input_2 == False:
+                display_more = input('\nWould you like to view more individual'
+                                     ' trip data? Type \'yes\' or \'no\'.\n')
+                valid_input_2 = is_valid(display_more)
+                if valid_input_2 == True:
+                    break
+                else:
+                    print("Sorry, I do not understand your input. Please type "
+                          "'yes' or 'no'.")
+            if display_more.lower() == 'yes':
+                head += 5
+                tail += 5
+                print(df[df.columns[0:-1]].iloc[head:tail])
+            elif display_more.lower() == 'no':
+                break
 
-    df = time_filters(df, period, month, day, month_day)
-    disp_raw_data(df)
 
-    # all the conclusions
-    stats_funcs_list = [month_freq,
-     day_freq, hour_freq,
-     ride_duration, common_trip,
-     stations_freq, bike_users, birth_years, gender_data]
+def statistics():
+    '''Calculates and prints out the descriptive statistics about a city and
+    time period specified by the user via raw input.
+    Args:
+        none.
+    Returns:
+        none.
+    '''
+    # Filter by city (Chicago, New York, Washington)
+    city = get_city()
+    print('Loading data...')
+    df = pd.read_csv(city, parse_dates = ['Start Time', 'End Time'])
 
-    for x in stats_funcs_list:	# displays processing time for each function block
-        process(x, df)
+    # change all column names to lowercase letters and replace spaces with underscores
+    new_labels = []
+    for col in df.columns:
+        new_labels.append(col.replace(' ', '_').lower())
+    df.columns = new_labels
 
-    # Restarting option
-    restart = input("\n * Would you like to do it again and perform another analysis? Type \'yes\' or \'no\'.\n")
-    if restart.upper() == 'YES' or restart.upper() == "Y":
-        main()
+    # increases the column width so that the long strings in the 'journey'
+    # column can be displayed fully
+    pd.set_option('max_colwidth', 100)
 
-if __name__ == '__main__':
-    main()
+    # creates a 'journey' column that concatenates 'start_station' with
+    # 'end_station' for the use popular_trip() function
+    df['journey'] = df['start_station'].str.cat(df['end_station'], sep=' to ')
+
+    # Filter by time period (month, day, none)
+    time_period = get_time_period()
+    if time_period == 'none':
+        df_filtered = df
+    elif time_period == 'month' or time_period == 'day':
+        if time_period == 'month':
+            filter_lower, filter_upper = get_month()
+        elif time_period == 'day':
+            filter_lower, filter_upper = get_day()
+        print('Filtering data...')
+        df_filtered = df[(df['start_time'] >= filter_lower) & (df['start_time'] < filter_upper)]
+    print('\nCalculating the first statistic...')
+
+    if time_period == 'none':
+        start_time = time.time()
+
+        # What is the most popular month for start time?
+        popular_month(df_filtered)
+        print("That took %s seconds." % (time.time() - start_time))
+        print("\nCalculating the next statistic...")
+
+    if time_period == 'none' or time_period == 'month':
+        start_time = time.time()
+
+        # What is the most popular day of week (Monday, Tuesday, etc.) for start time?
+        popular_day(df_filtered)
+        print("That took %s seconds." % (time.time() - start_time))
+        print("\nCalculating the next statistic...")
+        start_time = time.time()
+
+    # What is the most popular hour of day for start time?
+    popular_hour(df_filtered)
+    print("That took %s seconds." % (time.time() - start_time))
+    print("\nCalculating the next statistic...")
+    start_time = time.time()
+
+    # What is the total trip duration and average trip duration?
+    trip_duration(df_filtered)
+    print("That took %s seconds." % (time.time() - start_time))
+    print("\nCalculating the next statistic...")
+    start_time = time.time()
+
+    # What is the most popular start station and most popular end station?
+    popular_stations(df_filtered)
+    print("That took %s seconds." % (time.time() - start_time))
+    print("\nCalculating the next statistic...")
+    start_time = time.time()
+
+    # What is the most popular trip?
+    popular_trip(df_filtered)
+    print("That took %s seconds." % (time.time() - start_time))
+    print("\nCalculating the next statistic...")
+    start_time = time.time()
+
+    # What are the counts of each user type?
+    users(df_filtered)
+    print("That took %s seconds." % (time.time() - start_time))
+
+    if city == 'chicago.csv' or city == 'new_york_city.csv':
+        print("\nCalculating the next statistic...")
+        start_time = time.time()
+
+        # What are the counts of gender?
+        gender(df_filtered)
+        print("That took %s seconds." % (time.time() - start_time))
+        print("\nCalculating the next statistic...")
+        start_time = time.time()
+
+        # What are the earliest (i.e. oldest user), most recent (i.e. youngest
+        # user), and most popular birth years?
+        birth_years(df_filtered)
+        print("That took %s seconds." % (time.time() - start_time))
+
+    # Display five lines of data at a time if user specifies that they would like to
+    display_data(df_filtered)
+
+    # Restart?
+    restart = input('\nWould you like to restart? Type \'yes\' or \'no\'.\n')
+    while restart.lower() not in ['yes', 'no']:
+        print("Invalid input. Please type 'yes' or 'no'.")
+        restart = input('\nWould you like to restart? Type \'yes\' or \'no\'.\n')
+    if restart.lower() == 'yes':
+        statistics()
+
+
+if __name__ == "__main__":
+    statistics()
