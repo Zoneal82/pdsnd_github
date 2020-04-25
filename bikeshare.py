@@ -83,7 +83,7 @@ def get_day():
                 day = int(day)
                 is_int = True
             except ValueError:
-                print('Sorry, I do not understand your input. Please type your'
+                print('Please type your'
                       ' response as an integer.')
                 day = input('\nWhich day? Please type your response as an integer.\n')
         try:
