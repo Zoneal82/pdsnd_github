@@ -8,7 +8,7 @@ Udacity Data Science Nano Degree Final Project(bikeshare)
 This is a project to analyse bikeshare data from three(3) United States Cities
 
 ### Files used
-bikeshare.py 
+bikeshare.py
 new_york_city.csv
 washington.csv
 chicago.csv
